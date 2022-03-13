@@ -12,9 +12,7 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲
         self.browser_page = None
         self.browser_width = browser_width
         self.browser_height = browser_height
-
-    async def setup(self):  # 初始化 打開瀏覽器
-        self.browser = await pyppeteer.launch(headless=self.headless, args=[
+        self.browser_args = [
             '--disable-infobars',
             '--start-maximized',
             '--disable-extensions',
@@ -24,7 +22,10 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-gpu',
-        ], dumpio=True)  # *創建瀏覽器
+        ]
+
+    async def setup(self):  # 初始化 打開瀏覽器
+        self.browser = await pyppeteer.launch(headless=self.headless, args=self.browser_args, dumpio=True)  # *創建瀏覽器
         self.browser_page = await self.browser.newPage()
         await self.browser_page.evaluate(
             """() =>{Object.defineProperties(navigator, {webdriver:{get: () => false}})}""")
@@ -51,21 +52,28 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲
     def browser_close(self):
         self.browser_operate(self.close)
 
-    async def get_page_url(self, page):
-        return await page.url
-
-    async def get_page_cookies(self, page):
-        return await page.cookies()
-
-    async def run(self):
+    def run(self):
         pass
 
-    def browser_run(self):
-        self.browser_operate(self.run)
+    def before_browser_setup(self):
+        pass
+
+    def before_browser_close(self):
+        pass
+
+    def after_browser_setup(self):
+        pass
+
+    def after_browser_close(self):
+        pass
 
     def __enter__(self):
+        self.before_browser_setup()
         self.browser_setup()
+        self.after_browser_setup()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.before_browser_close()
         self.browser_close()
+        self.after_browser_close()
