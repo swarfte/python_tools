@@ -1,8 +1,18 @@
 import pyppeteer
 import asyncio
+import functools
+
+
+def browser_operate(async_function):  # 用於處理瀏覽器的異步操作
+    @functools.wraps(async_function)
+    def wrapper(*args, **kwargs):
+        return asyncio.get_event_loop().run_until_complete(async_function(*args, **kwargs))
+
+    return wrapper
 
 
 class BaseReptile(object):  # 基本的pyppeteer爬蟲
+
     def __init__(self, url: str, user_agent: str = "", browser_width: int = 1920, browser_height: int = 1080):  # 初始化設國
         super(BaseReptile, self).__init__()
         self.headless = False
@@ -24,6 +34,7 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲
             '--disable-gpu',
         ]
 
+    @browser_operate
     async def setup(self):  # 初始化 打開瀏覽器
         self.browser = await pyppeteer.launch(headless=self.headless, args=self.browser_args, dumpio=True)  # *創建瀏覽器
         self.browser_page = await self.browser.newPage()
@@ -40,40 +51,32 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲
             "height": self.browser_height
         })
 
-    async def close(self):
+    @browser_operate
+    async def close(self):  # 關閉瀏覽器
         await self.browser.close()
 
-    def browser_operate(self, async_function):
-        asyncio.get_event_loop().run_until_complete(async_function())
-
-    def browser_setup(self):
-        self.browser_operate(self.setup)
-
-    def browser_close(self):
-        self.browser_operate(self.close)
-
-    def run(self):
+    def run(self):  # 運行主程式
         pass
 
-    def before_browser_setup(self):
+    def before_setup(self):  # 初始化前的工作
         pass
 
-    def before_browser_close(self):
+    def before_close(self):  # 關閉瀏覽器前的工作
         pass
 
-    def after_browser_setup(self):
+    def after_setup(self):  # 初始化後的工作
         pass
 
-    def after_browser_close(self):
+    def after_close(self):  # 關閉瀏覽器後的工作
         pass
 
     def __enter__(self):
-        self.before_browser_setup()
-        self.browser_setup()
-        self.after_browser_setup()
+        self.before_setup()
+        self.setup()
+        self.after_setup()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.before_browser_close()
-        self.browser_close()
-        self.after_browser_close()
+        self.before_close()
+        self.close()
+        self.after_close()
