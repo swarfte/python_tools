@@ -1,6 +1,7 @@
 import pyppeteer
 import asyncio
 import functools
+import collections
 
 default = "self"
 
@@ -26,7 +27,9 @@ def async_operate(async_function):  # 用於處理瀏覽器的異步操作
 class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
     """Basic pyppeteer crawler model"""
 
-    def __init__(self, url: str, user_agent: str = "", browser_width: int = 1920, browser_height: int = 1080):  #
+    # ==============================以下是爬蟲的核心====================================================
+    def __init__(self, url: str, user_agent: str = "", browser_width: int = 1920,
+                 browser_height: int = 1080):  # 初始化瀏覽器的設定
         """Initialize settings"""
         super(BaseReptile, self).__init__()
         self.headless = False
@@ -48,6 +51,10 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
             '--disable-setuid-sandbox',
             '--disable-gpu',
         ]
+        self.property = {
+            "text": "element => element.textContent",
+            "href": "element => element.href"
+        }
 
     @async_operate
     async def setup(self):  # 初始化 打開瀏覽器
@@ -106,9 +113,7 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
         self.close_browser()
         self.after_close()
 
-    # ==============================以上是爬蟲的核心====================================================
-
-    # ===============================以下是Preptile爬蟲的懶人函數===================================================
+    # ===============================以下是爬蟲的基本函數===================================================
 
     @async_operate
     async def goto(self, url: str = default, page: pyppeteer = default) -> None:  # 通過鏈結訪問指定網站
@@ -124,6 +129,16 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
     async def content(self, page: pyppeteer = default) -> str:  # 返回網頁的源代碼
         """Returns the source code of the web page"""
         return await check_default(page, self.browser_page).content()
+
+    @async_operate
+    async def title(self, page: pyppeteer = default) -> str:  # 返回網頁的標題
+        """Returns the title of the page"""
+        return await check_default(page, self.browser_page).title()
+
+    @async_operate
+    async def cookies(self, page: pyppeteer = default) -> dict:  # 返回網頁的cookies
+        """"Return the cookies of the page"""
+        return await check_default(page, self.browser_page).cookies()
 
     @async_operate
     async def newPage(self, browser: pyppeteer = default) -> pyppeteer:  # 開啟新的分頁
@@ -162,7 +177,7 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
 
     @async_operate
     async def querySelectorEval(self, element_expression: str, js_expression: str,
-                                page: pyppeteer = default) -> str:  # 通過 css 選擇器選出匹配的元素後執行js代碼並獲取結果
+                                page: pyppeteer = default) -> str:  # 通過 css 選擇器選出第一個匹配的元素後執行js代碼並獲取結果
         """Execute the js code and get the result after selecting the matching element through the css selector"""
         return await check_default(page, self.browser_page).querySelectorEval(element_expression, js_expression)
 
@@ -171,3 +186,57 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
                                    page: pyppeteer = default) -> list:  # 通過 css 選擇器選出全部匹配的元素後執行js代碼並獲取結果
         """After selecting all matching elements through the css selector, execute the js code and get the result"""
         return await check_default(page, self.browser_page).querySelectorAllEval(element_expression, js_expression)
+
+    @async_operate
+    async def reload(self, page: pyppeteer = default) -> None:  # 刷新當前頁面
+        """refresh the current page"""
+        await check_default(page, self.browser_page).reload()
+
+    @async_operate
+    async def goBack(self, page: pyppeteer = default) -> None:  # 退回上一頁
+        """Back to previous page"""
+        await check_default(page, self.browser_page).goBack()
+
+    @async_operate
+    async def goForward(self, page: pyppeteer = default) -> None:  # 前進下一頁
+        """advance to next page"""
+        await check_default(page, self.browser_page).goForward()
+
+    @async_operate
+    async def setUserAgent(self, user_agent: str, page: pyppeteer = default) -> None:  # 設置頁面的用戶代理
+        """Set the user agent of the page"""
+        await check_default(page, self.browser_page).setUserAgent(user_agent)
+
+    @async_operate
+    async def setCookie(self, cookies: dict, page: pyppeteer = default) -> None:  # 設置頁面的cookie
+        """set page cookies"""
+        await check_default(page, self.browser_page).setCookie(cookies)
+
+    @async_operate
+    async def waitForSelector(self, element: str, page: pyppeteer) -> None:  # 等待符合選擇器的節點加載出來
+        """Wait for nodes matching the selector to load"""
+        return check_default(page, self.browser_page).waitForSelector(element)
+
+    @async_operate
+    async def waitForFunction(self, js_expression: str, page: pyppeteer) -> None:  # 等待要執行的js代碼
+        """Wait for the js code to be executed"""
+        return check_default(page, self.browser_page).waitForFunction(js_expression)
+
+    # ==========================================以下是爬蟲的集成函數===================================================
+
+    def login(self, user_tag: str, username: str, password_tag: str, password: str, click_tag: str,
+              page: pyppeteer = default) -> None:  # 用於在網頁中登入帳戶
+        """Used to log in to the account on the web"""
+        self.type(user_tag, username, page)
+        self.type(password_tag, password, page)
+        self.click(click_tag, page)
+
+    @async_operate
+    async def xpathData(self, element_expression: str, attributes: str,
+                        page: pyppeteer = default) -> str | list:  # 通過xpath表達式獲取匹配的元素並返回指定的屬性
+        """Get the matched element by xpath expression and return the specified attribute"""
+        elements = await check_default(page, self.browser_page).xpath(element_expression)
+        if isinstance(elements, collections.Iterable):
+            return [await (await x.getProperty(attributes)).jsonValue() for x in elements]
+        else:
+            return await(await elements.getProperty(attributes)).jsonValue()
