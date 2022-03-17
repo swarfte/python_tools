@@ -6,7 +6,12 @@
 
 ### 集成函數
 >* login 用於在網頁中登入帳戶
->*  xpathData 通過xpath表達式獲取匹配的元素並返回指定的屬性
+>* xpath_data 通過xpath表達式獲取匹配的元素並返回指定的屬性
+>* get_element_text 獲取第一個匹配元素的文本
+>* get_all_element_text 獲取全部匹配元素的文本
+>* get_element_url 獲取第一個匹配元素的連結
+>* get_all_element_url 獲取全部匹配元素的連結
+>* turn_pages 翻頁並執行指定函數
 
 ### 瀏覽器函數
 

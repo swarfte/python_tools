@@ -27,7 +27,7 @@ def async_operate(async_function):  # 用於處理瀏覽器的異步操作
 class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
     """Basic pyppeteer crawler model"""
 
-    # ==============================以下是爬蟲的核心====================================================
+    # region ==============================以下是爬蟲的核心====================================================
     def __init__(self, url: str, user_agent: str = "", browser_width: int = 1920,
                  browser_height: int = 1080):  # 初始化瀏覽器的設定
         """Initialize settings"""
@@ -113,7 +113,7 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
         self.close_browser()
         self.after_close()
 
-    # ===============================以下是爬蟲的基本函數===================================================
+    # region ===============================以下是爬蟲的基本函數===================================================
 
     @async_operate
     async def goto(self, url: str = default, page: pyppeteer = default) -> None:  # 通過鏈結訪問指定網站
@@ -222,7 +222,7 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
         """Wait for the js code to be executed"""
         return check_default(page, self.browser_page).waitForFunction(js_expression)
 
-    # ==========================================以下是爬蟲的集成函數===================================================
+    # region ==================================以下是爬蟲的集成函數(利用基本函數組合或複合函數)============================================
 
     def login(self, user_tag: str, username: str, password_tag: str, password: str, click_tag: str,
               page: pyppeteer = default) -> None:  # 用於在網頁中登入帳戶
@@ -232,11 +232,35 @@ class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
         self.click(click_tag, page)
 
     @async_operate
-    async def xpathData(self, element_expression: str, attributes: str,
-                        page: pyppeteer = default) -> str | list:  # 通過xpath表達式獲取匹配的元素並返回指定的屬性
+    async def xpath_data(self, element_expression: str, attributes: str,
+                         page: pyppeteer = default) -> str | list:  # 通過xpath表達式獲取匹配的元素並返回指定的屬性
         """Get the matched element by xpath expression and return the specified attribute"""
         elements = await check_default(page, self.browser_page).xpath(element_expression)
         if isinstance(elements, collections.Iterable):
             return [await (await x.getProperty(attributes)).jsonValue() for x in elements]
         else:
             return await(await elements.getProperty(attributes)).jsonValue()
+
+    def get_element_text(self, element_expression: str, page: pyppeteer = default) -> str:  # 獲取第一個匹配元素的文本
+        """Get the text of the first matched element """
+        return self.querySelectorEval(element_expression, self.property["text"], page)
+
+    def get_all_element_text(self, element_expression: str, page: pyppeteer = default) -> list:  # 獲取全部匹配元素的文本
+        """Get the text of all matched elements """
+        return self.querySelectorAllEval(element_expression, self.property["text"], page)
+
+    def get_element_url(self, element_expression: str, page: pyppeteer = default) -> str:  # 獲取第一個匹配元素的連結
+        """Get the link of the first matching element """
+        return self.querySelectorEval(element_expression, self.property['href'], page)
+
+    def get_all_element_url(self, element_expression: str, page: pyppeteer = default) -> list:  # 獲取全部匹配元素的連結
+        """Get links to all matching elements """
+        return self.querySelectorAllEval(element_expression, self.property['href'], page)
+
+    def turn_pages(self, button_expression: str, non_args_func, run: int = default, delay: int = default,
+                   page: pyppeteer = default) -> None:  # 翻頁並執行指定函數
+        """Turn the page and execute the specified function """
+        for run_time in range(check_default(run, 1)):
+            non_args_func()
+            self.click(button_expression, page)
+            self.sleep(delay)
