@@ -14,9 +14,15 @@ def decorator_test(a, b):
     return a * b
 
 
-class TestReptile(reptile.BaseReptile):
-    pass
+class TestDecorator(Sdecorators.Repeater):
+    def before_loop(self):
+        print("loop start")
+        print(f'run time : {self.run_time}')
 
 
-with reptile.BaseReptile("http://www.vakiodigital.com/login") as Connector:
-    Connector.goto()
+@TestDecorator(1,6,2)
+def repeat():
+    print("repeat !!")
+
+
+repeat()
