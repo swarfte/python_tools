@@ -120,7 +120,7 @@ class RunTimeMonitor(BaseDecorator):
             self.start_time[6:8]) + float(self.start_time[9:11]) / 1000
 
     def show_start_time(self):
-        print(f'"{self.sentence}" start time: {self.start_time}')
+        print(f'{self.sentence} start time: {self.start_time}')
 
     def before_invoke(self):
         self.start_count_time()
