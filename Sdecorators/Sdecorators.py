@@ -1,5 +1,6 @@
 import datetime as dt
 import functools
+import json
 
 keywords = {
     "default": "decorated function name"
@@ -55,28 +56,28 @@ class BaseDecorator(object):  # 裝飾函數的裝飾器
         pass
 
 
-class ConvertParameterType(BaseDecorator):  # 用於轉換被裝飾函數的形參類型
-    """Change the parameter type of the decorated function """
+class DecorateTheParameters(BaseDecorator):  # 裝飾被裝飾函數的參數
+    """Decorate the parameters of the decorated function"""
 
-    def __init__(self, types: type):  # 傳入讓被裝飾函數形參要轉換的類型
-        super(ConvertParameterType, self).__init__()
-        self.types = types
+    def __init__(self, decorate_func: type):  # 傳入要裝飾被裝飾函數形參的函數
+        super(DecorateTheParameters, self).__init__()
+        self.decorate_func = decorate_func
 
     def before_invoke(self):
-        self.func_args = tuple([self.types(x) for x in self.func_args])
+        self.func_args = tuple([self.decorate_func(x) for x in self.func_args])
         for k, y in self.func_kwargs.items():
-            self.func_kwargs[k] = self.types(y)
+            self.func_kwargs[k] = self.decorate_func(y)
 
 
-class ConvertResultType(BaseDecorator):  # 用於轉換被裝飾函數返回值的類型
+class DecorateTheResult(BaseDecorator):  # 裝飾被裝飾函數的回傳值
     """Change the return type of the decorated function"""
 
-    def __init__(self, types: type):  # 傳入讓返回值轉換的類型
-        super(ConvertResultType, self).__init__()
-        self.types = types
+    def __init__(self, decorate_func: type):  # 傳入要裝飾被裝飾函數回傳值的函數
+        super(DecorateTheResult, self).__init__()
+        self.decorate_func = decorate_func
 
     def after_invoke(self):
-        self.func_result = self.types(self.func_result)
+        self.func_result = self.decorate_func(self.func_result)
 
 
 class InvokeCount(BaseDecorator):  # 記錄被裝飾函數的調用次數,用group來劃分不同的組別
@@ -218,4 +219,13 @@ class Repeater(BaseDecorator):  # 用於重複執行被裝飾的函數
 
     def after_loop(self):  # 在for迴圈中執行被裝飾函數後的工作
         """Execute the work after the decorated function in the for loop"""
+        pass
+
+
+class JsonSaveResult(DecorateTheResult):  # 把被裝飾函數的回傳值保存至指定的json檔
+    def __init__(self, config_path, key):
+
+        super(JsonSaveResult, self).__init__(self.write)
+
+    def write(self):
         pass

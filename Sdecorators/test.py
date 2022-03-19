@@ -1,13 +1,12 @@
 import Sdecorators
-import Preptile as reptile
-import asyncio
 
 
 @Sdecorators.IgnoreException()
 @Sdecorators.RunTimeMonitor()
 @Sdecorators.InvokeCount()
 @Sdecorators.ShowFunctionDetail()
-@Sdecorators.ConvertResultType(str)
+@Sdecorators.DecorateTheResult(str)
+@Sdecorators.DecorateTheParameters(int)
 def decorator_test(a, b):
     print('starting')
 
@@ -20,9 +19,13 @@ class TestDecorator(Sdecorators.Repeater):
         print(f'run time : {self.run_time}')
 
 
-@TestDecorator(1,6,2)
+@TestDecorator(1, 6, 2)
 def repeat():
     print("repeat !!")
 
 
-repeat()
+def a ():
+    pass
+print(type(a))
+
+#repeat()
