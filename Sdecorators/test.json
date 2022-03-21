@@ -1,0 +1,20 @@
+{
+    "test_result": [
+        156,
+        156,
+        156,
+        156
+    ],
+    "repeat_result": [
+        "uu repeat !!",
+        "uu repeat !!",
+        "uu repeat !!",
+        "uu repeat !!",
+        "uu repeat !!",
+        "uu repeat !!"
+    ],
+    "decorator_result": [
+        "54",
+        "54"
+    ]
+}

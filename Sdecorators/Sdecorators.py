@@ -1,6 +1,7 @@
 import datetime as dt
 import functools
 import json
+import os
 
 keywords = {
     "default": "decorated function name"
@@ -69,11 +70,11 @@ class DecorateTheParameters(BaseDecorator):  # 裝飾被裝飾函數的參數
             self.func_kwargs[k] = self.decorate_func(y)
 
 
-class DecorateTheResult(BaseDecorator):  # 裝飾被裝飾函數的回傳值
+class DecorateTheReturn(BaseDecorator):  # 裝飾被裝飾函數的回傳值
     """Change the return type of the decorated function"""
 
     def __init__(self, decorate_func: type):  # 傳入要裝飾被裝飾函數回傳值的函數
-        super(DecorateTheResult, self).__init__()
+        super(DecorateTheReturn, self).__init__()
         self.decorate_func = decorate_func
 
     def after_invoke(self):
@@ -222,10 +223,55 @@ class Repeater(BaseDecorator):  # 用於重複執行被裝飾的函數
         pass
 
 
-class JsonSaveResult(DecorateTheResult):  # 把被裝飾函數的回傳值保存至指定的json檔
-    def __init__(self, config_path, key):
+class JsonSaveReturn(BaseDecorator):  # 把被裝飾函數的回傳值保存至指定的json檔
+    """Save the return value of the decorated function to the specified json file """
 
-        super(JsonSaveResult, self).__init__(self.write)
+    def __init__(self, config_path: str = keywords["default"], key: str = keywords["default"]):
+        super(JsonSaveReturn, self).__init__()
+        self.config_path = config_path
+        self.config = None
+        self.key = key
 
-    def write(self):
-        pass
+    def before_invoke(self):
+        if self.config_path == keywords["default"]:
+            self.config_path = f"./{self.func.__name__}.json"
+        if self.key == keywords["default"]:
+            self.key = "result"
+        self.check()
+        self.read()
+
+    def after_invoke(self):
+        if self.key not in self.config:
+            self.config[self.key] = []
+        self.config[self.key].append(self.func_result)
+        self.write()
+
+    def check(self):  # 檢測路徑是否存在
+        """Check if the path exists"""
+        if not os.path.exists(self.config_path):
+            self.create()
+
+    def create(self):  # 創建一個全新的json檔
+        """Create a brand new json file """
+        with open(self.config_path, "a", encoding="utf-8") as f:
+            json.dump({}, f, indent=4, ensure_ascii=False)
+
+    def read(self):  # 讀取json檔資料
+        """Read json file data """
+        with open(self.config_path, "r", encoding="utf-8") as f:
+            self.config = json.load(f)
+
+    def write(self):  # 寫入json檔
+        """write json file """
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(self.config, f, indent=4, ensure_ascii=False)
+
+
+class JsonReadData(BaseDecorator):
+    """"""
+
+    def __init__(self, config_path: str, key: str):
+        super(JsonReadData, self).__init__()
+        self.config_path = config_path
+        self.config = None
+        self.key = key
