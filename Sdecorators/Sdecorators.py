@@ -60,20 +60,24 @@ class BaseDecorator(object):  # 裝飾函數的裝飾器
 class DecorateTheParameters(BaseDecorator):  # 裝飾被裝飾函數的參數
     """Decorate the parameters of the decorated function"""
 
-    def __init__(self, decorate_func: type):  # 傳入要裝飾被裝飾函數形參的函數
+    def __init__(self, decorate_func, parameters_index: int = 0):  # 傳入要裝飾被裝飾函數形參的函數
         super(DecorateTheParameters, self).__init__()
         self.decorate_func = decorate_func
+        self.parameters_index = parameters_index
 
     def before_invoke(self):
-        self.func_args = tuple([self.decorate_func(x) for x in self.func_args])
-        for k, y in self.func_kwargs.items():
-            self.func_kwargs[k] = self.decorate_func(y)
+        self.func_args = list(self.func_args)
+        self.func_args[self.parameters_index] = self.decorate_func(self.func_args[self.parameters_index])
+        self.func_args = tuple(self.func_args)
+        # self.func_args = tuple([self.decorate_func(x) for x in self.func_args])
+        # for k, y in self.func_kwargs.items():
+        #     self.func_kwargs[k] = self.decorate_func(y)
 
 
 class DecorateTheReturn(BaseDecorator):  # 裝飾被裝飾函數的回傳值
     """Change the return type of the decorated function"""
 
-    def __init__(self, decorate_func: type):  # 傳入要裝飾被裝飾函數回傳值的函數
+    def __init__(self, decorate_func):  # 傳入要裝飾被裝飾函數回傳值的函數
         super(DecorateTheReturn, self).__init__()
         self.decorate_func = decorate_func
 
@@ -234,44 +238,62 @@ class JsonSaveReturn(BaseDecorator):  # 把被裝飾函數的回傳值保存至�
 
     def before_invoke(self):
         if self.config_path == keywords["default"]:
-            self.config_path = f"./{self.func.__name__}.json"
+            self.config_path = f"{self.func.__name__}.json"
         if self.key == keywords["default"]:
-            self.key = "result"
-        self.check()
-        self.read()
+            self.key = f"{self.func.__name__}_result"
+        self.check_json_path()
+        self.read_json()
 
     def after_invoke(self):
         if self.key not in self.config:
             self.config[self.key] = []
         self.config[self.key].append(self.func_result)
-        self.write()
+        self.write_json()
 
-    def check(self):  # 檢測路徑是否存在
-        """Check if the path exists"""
+    def check_json_path(self):  # 檢測路徑是否存在 如果不存在則創建全新的json檔
+        """Check if the path exists, if not, create a new json file """
         if not os.path.exists(self.config_path):
-            self.create()
+            with open(self.config_path, "a", encoding="utf-8") as f:
+                json.dump({}, f, indent=4, ensure_ascii=False)
 
-    def create(self):  # 創建一個全新的json檔
-        """Create a brand new json file """
-        with open(self.config_path, "a", encoding="utf-8") as f:
-            json.dump({}, f, indent=4, ensure_ascii=False)
-
-    def read(self):  # 讀取json檔資料
+    def read_json(self):  # 讀取json檔資料
         """Read json file data """
         with open(self.config_path, "r", encoding="utf-8") as f:
             self.config = json.load(f)
 
-    def write(self):  # 寫入json檔
+    def write_json(self):  # 寫入json檔
         """write json file """
         with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(self.config, f, indent=4, ensure_ascii=False)
 
 
-class JsonReadData(BaseDecorator):
-    """"""
+class JsonReadData(BaseDecorator):  # 讓被裝飾函數的參數通過json檔獲取數值,可使用篩選函數判斷是否需要替換
+    """Let the parameters of the decorated function get the value through the json file """
 
-    def __init__(self, config_path: str, key: str):
+    def __init__(self, config_path: str, key: str, parameters_index: int = 0,
+                 judgment_function=keywords["default"]):
         super(JsonReadData, self).__init__()
         self.config_path = config_path
         self.config = None
         self.key = key
+        self.parameters_index = parameters_index
+        self.judgment_function = judgment_function
+
+    def before_invoke(self):
+        if not self.judgment_function == keywords["default"]:
+            if not self.judgment_function(self.func_args[self.parameters_index]):  # 不滿足篩選條件則用Json數值代替
+                self.read_json()
+                self.assign_value()
+        else:  # 預設的情況
+            self.read_json()
+            self.assign_value()
+
+    def read_json(self):  # 讀取json檔資料
+        """Read json file data """
+        with open(self.config_path, "r", encoding="utf-8") as f:
+            self.config = json.load(f)
+
+    def assign_value(self):  # 傳入json檔的數值取代被裝飾函數的參數
+        """The value passed in the json file replaces the parameter of the decorated function  """
+        self.func_args = list(self.func_args)
+        self.func_args[self.parameters_index] = self.config[self.key]

@@ -9,6 +9,7 @@ import Sdecorators
 @Sdecorators.ShowFunctionDetail()
 @Sdecorators.DecorateTheReturn(str)
 @Sdecorators.DecorateTheParameters(int)
+@Sdecorators.JsonReadData("./data.json", "first_number")
 def decorator_test(a, b):
     print('starting')
 
@@ -22,11 +23,13 @@ def repeat(name):
     return f"{name} repeat !!"
 
 
-@Sdecorators.JsonSaveReturn("./test.json", "test_result")
-def a(b):
-    return b * 2
+@Sdecorators.JsonSaveReturn("./test.json")
+@Sdecorators.JsonReadData("./data.json", "second_number", 1,lambda x : x > 100)
+@Sdecorators.JsonReadData("./data.json", "first_number", 0)
+def a(b, c):
+    return b * c
 
 
-print(a(78))
-print(repeat("uu"))
-print(decorator_test(6, 9))
+print(a("a", 120))
+# print(repeat("uu"))
+print(decorator_test(5,3))
