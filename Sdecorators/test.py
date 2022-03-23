@@ -24,12 +24,12 @@ def repeat(name):
 
 
 @Sdecorators.JsonSaveReturn("./test.json")
-@Sdecorators.JsonReadData("./data.json", "second_number", 1,lambda x : x > 100)
-@Sdecorators.JsonReadData("./data.json", "first_number", 0)
+@Sdecorators.JsonReadData("./test.json", "second_number", 1,lambda x : x > 100)
+@Sdecorators.JsonReadData("./test.json", "first_number", 0)
 def a(b, c):
     return b * c
 
 
-print(a("a", 120))
+print(a("a", 102))
 # print(repeat("uu"))
-print(decorator_test(5,3))
+#print(decorator_test(5,3))

@@ -13,11 +13,11 @@ class BaseDecorator(object):  # 裝飾函數的裝飾器
 
     def __init__(self, *args, **kwargs):  # 獲取裝飾器初始化的傳入參數
         super(BaseDecorator, self).__init__()
-        self.func = None  # 所裝飾的函數
+        self.func = None  # 被裝飾的函數
         self.func_args = None  # 被裝飾函數的可變位置參數
         self.func_kwargs = None  # 被裝飾函數的關鍵字參數
         self.func_result = None  # 被裝飾函數運行後的返回值
-        self.types = args  # 對像裝飾器自身的可變位置參數
+        self.decorator_args = args  # 對像裝飾器自身的可變位置參數
         self.decorator_kwargs = kwargs  # 對像裝飾器自身的關鍵字參數
 
     def __call__(self, func):  # 當作函數比調用時接收的參數(接收函數作為參數->裝飾器)
@@ -114,7 +114,7 @@ class InvokeCount(BaseDecorator):  # 記錄被裝飾函數的調用次數,用gro
         print(f'{self.group} : {self.count()}')
 
 
-class RunTimeMonitor(BaseDecorator):
+class RunTimeMonitor(BaseDecorator): # 記錄被裝飾函數的運行時間
     """Record the running time of the decorated function"""
 
     def __init__(self, sentence: str = keywords["default"]):
