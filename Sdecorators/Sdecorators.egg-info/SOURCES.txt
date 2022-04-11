@@ -1,0 +1,7 @@
+README.md
+setup.py
+Sdecorators.egg-info/PKG-INFO
+Sdecorators.egg-info/SOURCES.txt
+Sdecorators.egg-info/dependency_links.txt
+Sdecorators.egg-info/not-zip-safe
+Sdecorators.egg-info/top_level.txt

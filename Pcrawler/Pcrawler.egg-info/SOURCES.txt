@@ -1,0 +1,8 @@
+README.md
+setup.py
+Pcrawler.egg-info/PKG-INFO
+Pcrawler.egg-info/SOURCES.txt
+Pcrawler.egg-info/dependency_links.txt
+Pcrawler.egg-info/not-zip-safe
+Pcrawler.egg-info/requires.txt
+Pcrawler.egg-info/top_level.txt

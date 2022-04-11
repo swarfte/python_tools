@@ -24,14 +24,14 @@ def async_operate(async_function):  # 用於處理瀏覽器的異步操作
     return wrapper
 
 
-class BaseReptile(object):  # 基本的pyppeteer爬蟲模型
+class BaseCrawler(object):  # 基本的pyppeteer爬蟲模型
     """Basic pyppeteer crawler model"""
 
     # region ==============================以下是爬蟲的核心====================================================
     def __init__(self, url: str, user_agent: str = "", browser_width: int = 1920,
                  browser_height: int = 1080):  # 初始化瀏覽器的設定
         """Initialize settings"""
-        super(BaseReptile, self).__init__()
+        super(BaseCrawler, self).__init__()
         self.headless = False
         self.url = url
         self.user_agent = user_agent
