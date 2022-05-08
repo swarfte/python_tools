@@ -2,6 +2,7 @@ import datetime as dt
 import functools
 import json
 import os
+import sys
 
 keywords = {
     "default": "decorated function name"
@@ -114,7 +115,7 @@ class InvokeCount(BaseDecorator):  # 記錄被裝飾函數的調用次數,用gro
         print(f'{self.group} : {self.count()}')
 
 
-class RunTimeMonitor(BaseDecorator): # 記錄被裝飾函數的運行時間
+class RunTimeMonitor(BaseDecorator):  # 記錄被裝飾函數的運行時間
     """Record the running time of the decorated function"""
 
     def __init__(self, sentence: str = keywords["default"]):
@@ -297,3 +298,29 @@ class JsonReadData(BaseDecorator):  # 讓被裝飾函數的參數通過json檔�
         """The value passed in the json file replaces the parameter of the decorated function  """
         self.func_args = list(self.func_args)
         self.func_args[self.parameters_index] = self.config[self.key]
+
+
+class TailRecurseException(Exception):
+    """for catching tail recursion"""
+    def __init__(self, args, kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+
+def TailCallOptimized(g):
+    """Optimizing tail recursion in python"""
+    def func(*args, **kwargs):
+        f = sys._getframe()
+        if f.f_back and f.f_back.f_back \
+                and f.f_back.f_back.f_code == f.f_code:
+            raise TailRecurseException(args, kwargs)
+        else:
+            while 1:
+                try:
+                    return g(*args, **kwargs)
+                except TailRecurseException as e:
+                    args = e.args
+                    kwargs = e.kwargs
+
+    func.__doc__ = g.__doc__
+    return func
